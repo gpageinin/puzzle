@@ -1,28 +1,30 @@
 # puzzle
 
 N*Nパズルを強化学習で解きます。
-方策勾配法を用いています。
-[このサイト](https://gpa.hateblo.jp/entry/2020/01/16/094814)で紹介しているやつの実装です。
+[このサイト](https://gpa.hateblo.jp/entry/2020/01/16/094814)で紹介しているやつです。
 
-# Install
+## Install
 
-以下のコマンドで`gym-puzzle`をインストールする。
+まず、[PyTorchの公式サイト](https://pytorch.org/)を参考にして、PyTorchをインストールしてください。
+「QUICK START LOCALLY」というところを見ればいいです。
+
+その後、以下のコマンドを実行すればインストールできます。
 
 ```
-pip install -e gym-puzzle
+$ cd puzzle/
+$ pip install -e gym-puzzle
+$ pip install -e .
 ```
 
-また、PyTorchは、[PyTorchの公式ウェブサイト](https://pytorch.org/)を見てインストールする。
+## Learn
 
-# Usage
+`python train.py`で学習できます。
 
-`train.py`を実行すれば学習できます。
-`test.py`を実行すれば学習済エージェントの動作を確認できます。
-
-# Author
+## Author
 
 GPA芸人（@\_Yorihime\_W\_）
 
-# LICENSE
+## License
 
 MIT
+

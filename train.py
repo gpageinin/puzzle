@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-import tensorboardX as tbx
 import torch
 import torch.optim as opt
 from tqdm import tqdm
@@ -16,10 +15,11 @@ MAX_STEPS = 1000  # 1エピソード内で最大何回行動するか
 GAMMA = .99  # 時間割引率
 
 env = gym.make('puzzle-v0')
-agent = Agent(env.N, HIDDEN_NUM)
+agent = Agent(env.metadata['N'], HIDDEN_NUM)
 optimizer = opt.Adam(agent.parameters())
 
 
+# 1エピソード（`done`が`True`になるまで）行動し続け、lossを返す
 def do_episode():
     obs = env.reset()
     obss, actions, rewards = [], [], []
@@ -28,14 +28,18 @@ def do_episode():
     agent.eval()
     with torch.no_grad():
         for step in range(1, MAX_STEPS + 1):
-            obs = torch.tensor([obs], dtype=torch.float32)
+            # observationをPyTorchで使える形式に変換し、保存する
+            obs = torch.tensor([obs], dtype=torch.float)
             obss.append(obs)
 
+            # 方策から出力された行動確率を元に行動を決定し、行動する
             prob = agent(obs)[0].exp().numpy()
             action = np.random.choice(range(4), p=prob)
             obs, reward, done, _ = env.step(action)
 
-            actions.append(torch.eye(4, dtype=torch.float32)[action])  # 後の都合でone-hot形式で保存
+            # 行動と報酬を保存する
+            # 行動は、one-hot形式と呼ばれる形で保存する（後の都合）
+            actions.append(torch.eye(4, dtype=torch.float)[action])
             rewards.append(reward)
 
             if done:
@@ -49,7 +53,7 @@ def do_episode():
 
     # lossを計算して返す
     agent.train()
-    loss_sum = .0
+    loss_sum = 0
     log_pis = [agent(o)[0] * a for (o, a) in zip(obss, actions)]
     for log_pi, r in zip(log_pis, cum_rewards):
         loss_sum = loss_sum - (log_pi * r).sum()
@@ -58,16 +62,12 @@ def do_episode():
 
 
 if __name__ == '__main__':
-    with tbx.SummaryWriter() as writer:
-        for episode in tqdm(range(1, EPISODE_NUM + 1)):
-            loss = do_episode()
+    for episode in tqdm(range(1, EPISODE_NUM + 1)):
+        # 1エピソードを実行して、lossを得る
+        loss = do_episode()
 
-            # lossを用いて方策を更新する
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            writer.add_scalar('loss/loss', loss.item(), episode)
-
-    torch.save(agent.state_dict(), 'agent.tar')
+        # lossを用いて方策を更新する
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
